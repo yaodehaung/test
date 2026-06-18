@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pure C Express Server"
+  short_description: "Work on this pure C epoll web server"
+  default_prompt: "Use $pure-c-express-server to work on this project's pure C epoll mini Express server."
