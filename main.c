@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lib/epoll_server.h"
-#include "lib/hash_map.h"
-#include "lib/json_parser.h"
-#include "lib/mini_express.h"
+#include "lib/core-net/epoll_server.h"
+#include "lib/core/mini_express.h"
+#include "lib/misc/hash_map.h"
+#include "lib/misc/json_parser.h"
 
 #define PORT 8080
 

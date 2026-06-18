@@ -3,7 +3,9 @@ CFLAGS ?= -Wall -Wextra -O2
 LDFLAGS ?=
 
 TARGET := mini_express
-SRC := main.c lib/mini_express.c lib/hash_map.c lib/epoll_server.c lib/json_parser.c
+SRC := main.c lib/core/mini_express.c lib/misc/hash_map.c \
+	lib/core-net/epoll_server.c lib/misc/json_parser.c \
+	lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c lib/roles/http3.c
 UNAME_S := $(shell uname -s)
 
 .PHONY: all run debug clean unsupported

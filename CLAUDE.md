@@ -226,14 +226,14 @@ typedef struct {
 } RouteRule;
 ```
 
-`lib/mini_express.c` 內部維護 route table：
+`lib/core/mini_express.c` 內部維護 route table：
 
 ```c
 static RouteRule route_table[MAX_ROUTES];
 static int route_count;
 ```
 
-`lib/mini_express.h` 對外提供路由註冊 API：
+`lib/core/mini_express.h` 對外提供路由註冊 API：
 
 ```c
 void app_get(const char *path, RouteHandler handler);
@@ -493,14 +493,22 @@ if (body) body += 4;
 
 ```bash
 main.c
-lib/epoll_server.c
-lib/epoll_server.h
-lib/hash_map.c
-lib/hash_map.h
-lib/json_parser.c
-lib/json_parser.h
-lib/mini_express.c
-lib/mini_express.h
+lib/core/mini_express.c
+lib/core/mini_express.h
+lib/core-net/epoll_server.c
+lib/core-net/epoll_server.h
+lib/misc/hash_map.c
+lib/misc/hash_map.h
+lib/misc/json_parser.c
+lib/misc/json_parser.h
+lib/roles/roles.c
+lib/roles/roles.h
+lib/roles/http1.c
+lib/roles/http1.h
+lib/roles/http2.c
+lib/roles/http2.h
+lib/roles/http3.c
+lib/roles/http3.h
 ```
 
 使用 Makefile 編譯：
@@ -512,7 +520,7 @@ make
 或直接使用 gcc 編譯：
 
 ```bash
-gcc -Wall -Wextra -O2 main.c lib/mini_express.c lib/hash_map.c lib/epoll_server.c lib/json_parser.c -o mini_express
+gcc -Wall -Wextra -O2 main.c lib/core/mini_express.c lib/core-net/epoll_server.c lib/misc/hash_map.c lib/misc/json_parser.c lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c lib/roles/http3.c -o mini_express
 ```
 
 ---
