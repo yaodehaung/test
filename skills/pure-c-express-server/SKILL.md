@@ -1,6 +1,6 @@
 ---
 name: pure-c-express-server
-description: Project workflow for the pure C dependency-free mini Express server in this repository. Use when Codex is asked to modify, explain, build, run, debug, or commit changes involving main.c, Makefile, the epoll HTTP server, mini router, JSON field parser, or in-memory hash map cache.
+description: Project workflow for the pure C dependency-free mini Express server in this repository. Use when Codex is asked to modify, explain, build, run, debug, or commit changes involving main.c, Makefile, the epoll HTTP server, mini router, JSON field parser, in-memory hash map cache, or Linux-kernel-style commit messages.
 ---
 
 # Pure C Express Server
@@ -71,4 +71,25 @@ Before committing:
 - Run `git status --short`.
 - Stage only files the user asked to include.
 - Leave `.vscode/` untracked unless explicitly requested.
-- Use concise conventional commit messages, for example `feat: ...`, `fix: ...`, `build: ...`, or `docs: ...`.
+- Write commit messages in Linux kernel style when the user asks for a commit or a commit message.
+
+Kernel-style commit format:
+
+```text
+subsystem: concise imperative subject
+
+Explain the bug, behavior change, or motivation in complete paragraphs.
+Describe why the change is needed before describing what changed. Wrap body
+lines around 72 columns when practical.
+
+Describe the fix and important affected paths. Mention validation or limits
+when relevant.
+
+Fixes: <sha> ("original subject")
+Cc: stable@vger.kernel.org
+Reported-by: Name <email>
+Signed-off-by: Name <email>
+Link: https://example.invalid/patch-or-report
+```
+
+Use trailers only when they are true and provided by the repo history, user, or patch context. Do not invent `Fixes`, `Reported-by`, `Cc`, `Link`, or `Signed-off-by` lines. For this project, choose subjects such as `build: add Linux-only Makefile guard`, `docs: document project skill workflow`, or `net: preserve cache route semantics` depending on the touched area.
