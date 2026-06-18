@@ -97,7 +97,29 @@ void res_error(Response *res, int status_code, const char *error_message) {
 // ============================================================================
 // 【第三區】乾淨、高雅的 API 業務邏輯 (Handlers) —— 告別記憶體管理！
 // ============================================================================
+int write_all(int fd, const char *buf, size_t len) {
+    size_t sent = 0;
+
+    while (sent < len) {
+        ssize_t n = write(fd, buf + sent, len - sent);
+
+        if (n > 0) {
+            sent += (size_t)n;
+            continue;
+        }
+
+        if (n == -1 && errno == EINTR) {
+            continue;
+        }
+
+        return -1;
+    }
+
+    return 0;
+}
+
 void handle_home(Request *req, Response *res) {
+    (void)req;
     res_success(res, "Welcome to 100% Pure C Dependency-Free Express Engine!");
 }
 
@@ -162,8 +184,10 @@ void dispatch_to_framework(ClientState *client, const char *method, const char *
     // 發送標準 HTTP 回應
     char header[512];
     sprintf(header, "HTTP/1.1 %d OK\r\nContent-Type: application/json; charset=utf-8\r\nContent-Length: %zu\r\nConnection: close\r\n\r\n", res.status_code, strlen(res.response_buf));
-    write(client->fd, header, strlen(header));
-    write(client->fd, res.response_buf, strlen(res.response_buf));
+    if (write_all(client->fd, header, strlen(header)) == -1) {
+        return;
+    }
+    write_all(client->fd, res.response_buf, strlen(res.response_buf));
 }
 
 int main() {
@@ -183,7 +207,7 @@ int main() {
     ClientState *server_state = calloc(1, sizeof(ClientState)); server_state->fd = server_fd;
     ev.events = EPOLLIN; ev.data.ptr = server_state; epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ev);
 
-    printf("? 100%% 純 C 零依賴自製 Web 引擎全面運作中！Port %d...\n", PORT);
+    printf("100%% Pure C dependency-free web engine running on port %d...\n", PORT);
 
     while (1) {
         int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
