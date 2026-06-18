@@ -11,10 +11,16 @@ Work on this repository as a small Linux-only C web server project. Preserve the
 
 ## Project Shape
 
-- `main.c` contains the Linux socket/epoll server, cache handlers, and app routes.
+- `main.c` contains cache API handlers, route registration, and startup entry point.
+- `lib/epoll_server.h` exposes the Linux epoll server runner.
+- `lib/epoll_server.c` owns the socket setup, HTTP response writing, client state, and epoll event loop.
+- `lib/hash_map.h` exposes the in-memory cache API.
+- `lib/hash_map.c` owns the hash function and hash map storage operations.
+- `lib/json_parser.h` exposes the minimal JSON string field extractor.
+- `lib/json_parser.c` owns flat JSON string field parsing.
 - `lib/mini_express.h` exposes the mini router API, including `app_get()` and `app_post()`.
 - `lib/mini_express.c` owns the route table, route registration, dispatch, and response helpers.
-- `Makefile` builds `main.c` and `lib/mini_express.c` into `mini_express`.
+- `Makefile` builds `main.c`, `lib/mini_express.c`, `lib/hash_map.c`, `lib/epoll_server.c`, and `lib/json_parser.c` into `mini_express`.
 - `CLAUDE.md` documents the architecture and expected behavior.
 - `.vscode/` is local editor configuration. Do not stage or commit it unless the user explicitly asks for it.
 
@@ -34,7 +40,7 @@ The code uses `sys/epoll.h`, so it must be compiled on Linux. On macOS, expect `
 ## Coding Guidelines
 
 - Keep the project dependency-free unless the user explicitly asks to add a library.
-- Prefer focused edits. Put router API changes in `lib/mini_express.h/.c` and server/cache behavior in `main.c`.
+- Prefer focused edits. Put router API changes in `lib/mini_express.h/.c`, cache storage changes in `lib/hash_map.h/.c`, JSON parser changes in `lib/json_parser.h/.c`, socket/epoll loop changes in `lib/epoll_server.h/.c`, and API handler behavior in `main.c`.
 - Use standard C/POSIX patterns already present in the project.
 - Be careful with non-blocking sockets: partial reads/writes, `EAGAIN`, and `EWOULDBLOCK` matter.
 - Remember the current JSON parser is intentionally minimal and only extracts quoted string fields.

@@ -493,6 +493,12 @@ if (body) body += 4;
 
 ```bash
 main.c
+lib/epoll_server.c
+lib/epoll_server.h
+lib/hash_map.c
+lib/hash_map.h
+lib/json_parser.c
+lib/json_parser.h
 lib/mini_express.c
 lib/mini_express.h
 ```
@@ -506,7 +512,7 @@ make
 或直接使用 gcc 編譯：
 
 ```bash
-gcc -Wall -Wextra -O2 main.c lib/mini_express.c -o mini_express
+gcc -Wall -Wextra -O2 main.c lib/mini_express.c lib/hash_map.c lib/epoll_server.c lib/json_parser.c -o mini_express
 ```
 
 ---
