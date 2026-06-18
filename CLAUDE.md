@@ -226,18 +226,18 @@ typedef struct {
 } RouteRule;
 ```
 
-全域 route table：
+`lib/mini_express.c` 內部維護 route table：
 
 ```c
-RouteRule route_table[MAX_ROUTES];
-int route_count = 0;
+static RouteRule route_table[MAX_ROUTES];
+static int route_count;
 ```
 
-註冊路由：
+`lib/mini_express.h` 對外提供路由註冊 API：
 
 ```c
-#define app_get(path, handler) app_register("GET", path, handler)
-#define app_post(path, handler) app_register("POST", path, handler)
+void app_get(const char *path, RouteHandler handler);
+void app_post(const char *path, RouteHandler handler);
 ```
 
 使用方式：
@@ -489,22 +489,24 @@ if (body) body += 4;
 
 ## 9. 編譯方式
 
-假設檔案名稱為：
+專案目前拆成：
 
 ```bash
-mini_express.c
+main.c
+lib/mini_express.c
+lib/mini_express.h
 ```
 
-使用 gcc 編譯：
+使用 Makefile 編譯：
 
 ```bash
-gcc mini_express.c -o mini_express
+make
 ```
 
-建議加上警告選項：
+或直接使用 gcc 編譯：
 
 ```bash
-gcc -Wall -Wextra -O2 mini_express.c -o mini_express
+gcc -Wall -Wextra -O2 main.c lib/mini_express.c -o mini_express
 ```
 
 ---

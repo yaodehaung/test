@@ -3,7 +3,7 @@ CFLAGS ?= -Wall -Wextra -O2
 LDFLAGS ?=
 
 TARGET := mini_express
-SRC := main.c
+SRC := main.c lib/mini_express.c
 UNAME_S := $(shell uname -s)
 
 .PHONY: all run debug clean unsupported

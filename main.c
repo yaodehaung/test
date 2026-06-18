@@ -7,14 +7,14 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
+#include "lib/mini_express.h"
 
 #define PORT 8080
 #define MAX_EVENTS 64
 #define HASH_MAP_SIZE 1024
-#define MAX_ROUTES 20
 
 // ============================================================================
-// 【第一區】自製 O(1) Hash Map 快取核心 (Mini-Redis)
+// In-memory hash map cache (Mini Redis style)
 // ============================================================================
 typedef struct HashNode {
     char *key; char *value; struct HashNode *next;
@@ -49,26 +49,9 @@ const char* hash_map_get(HashMap *map, const char *key) {
 }
 
 // ============================================================================
-// 【第二區】自製零依賴 JSON 引擎 & Mini-Express 框架層
+// Minimal JSON field extractor
 // ============================================================================
-typedef struct { const char *method; const char *path; const char *body; } Request;
-typedef struct { int status_code; char response_buf[4096]; } Response;
-typedef void (*RouteHandler)(Request *, Response *);
-
-typedef struct { const char *method; const char *path; RouteHandler handler; } RouteRule;
-RouteRule route_table[MAX_ROUTES];
-int route_count = 0;
-
-void app_register(const char *method, const char *path, RouteHandler handler) {
-    if (route_count < MAX_ROUTES) {
-        route_table[route_count].method = method; route_table[route_count].path = path;
-        route_table[route_count].handler = handler; route_count++;
-    }
-}
-#define app_get(path, handler) app_register("GET", path, handler)
-#define app_post(path, handler) app_register("POST", path, handler)
-
-// ? 自製零記憶體配置 JSON 欄位提取器
+// Extract a quoted string field from a flat JSON object.
 int json_get_string(const char *json, const char *field, char *output, size_t max_len) {
     if (!json) return 0;
     char target[64]; snprintf(target, sizeof(target), "\"%s\"", field);
@@ -83,19 +66,8 @@ int json_get_string(const char *json, const char *field, char *output, size_t ma
     return 1;
 }
 
-// ? 狀態與錯誤統一回應封裝
-void res_success(Response *res, const char *message) {
-    res->status_code = 200;
-    snprintf(res->response_buf, sizeof(res->response_buf), "{\"status\":\"success\",\"message\":\"%s\"}", message);
-}
-
-void res_error(Response *res, int status_code, const char *error_message) {
-    res->status_code = status_code;
-    snprintf(res->response_buf, sizeof(res->response_buf), "{\"status\":\"error\",\"error\":\"%s\"}", error_message);
-}
-
 // ============================================================================
-// 【第三區】乾淨、高雅的 API 業務邏輯 (Handlers) —— 告別記憶體管理！
+// API handlers and response writing
 // ============================================================================
 int write_all(int fd, const char *buf, size_t len) {
     size_t sent = 0;
@@ -127,7 +99,7 @@ void handle_set_cache(Request *req, Response *res) {
     char key[64] = {0};
     char value[256] = {0};
 
-    // 利用指針對映直接抽取欄位
+    // Extract required string fields from the simple JSON body.
     int has_key = json_get_string(req->body, "key", key, sizeof(key));
     int has_val = json_get_string(req->body, "value", value, sizeof(value));
 
@@ -160,7 +132,7 @@ void handle_get_cache(Request *req, Response *res) {
 }
 
 // ============================================================================
-// 【第四區】底層 Epoll 網路核心與分流引擎
+// Linux epoll server core
 // ============================================================================
 int epoll_fd;
 typedef struct { int fd; char read_buf[4096]; int read_idx; } ClientState;
@@ -168,20 +140,11 @@ typedef struct { int fd; char read_buf[4096]; int read_idx; } ClientState;
 void set_nonblocking(int fd) { fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK); }
 
 void dispatch_to_framework(ClientState *client, const char *method, const char *path, const char *body) {
-    Request req = { method, path, body };
-    Response res = { 404, "" };
+    Response res;
 
-    int matched = 0;
-    for (int i = 0; i < route_count; i++) {
-        if (strcmp(method, route_table[i].method) == 0 && strcmp(path, route_table[i].path) == 0) {
-            route_table[i].handler(&req, &res);
-            matched = 1; break;
-        }
-    }
+    app_dispatch_request(method, path, body, &res);
 
-    if (!matched) { res_error(&res, 404, "Route URL not found"); }
-
-    // 發送標準 HTTP 回應
+    // Build and send a minimal HTTP/1.1 JSON response.
     char header[512];
     sprintf(header, "HTTP/1.1 %d OK\r\nContent-Type: application/json; charset=utf-8\r\nContent-Length: %zu\r\nConnection: close\r\n\r\n", res.status_code, strlen(res.response_buf));
     if (write_all(client->fd, header, strlen(header)) == -1) {
@@ -191,7 +154,7 @@ void dispatch_to_framework(ClientState *client, const char *method, const char *
 }
 
 int main() {
-    // 初始化自製快取與 Express 路由表
+    // Initialize the cache and register routes.
     my_redis = calloc(1, sizeof(HashMap));
     app_get("/", handle_home);
     app_post("/api/cache/set", handle_set_cache);
@@ -222,7 +185,7 @@ int main() {
                     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
                 }
             } else {
-                // 邊緣觸發 (ET) 讀取迴圈
+                // Read all currently available bytes on the edge-triggered socket.
                 while (1) {
                     int n = read(state->fd, state->read_buf + state->read_idx, sizeof(state->read_buf) - state->read_idx - 1);
                     if (n > 0) { state->read_idx += n; state->read_buf[state->read_idx] = '\0'; }
