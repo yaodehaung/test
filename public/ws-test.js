@@ -15,7 +15,11 @@
 
     socket.addEventListener("open", function () {
       append("open: handshake accepted");
-      append("note: this server currently closes after the handshake");
+      append("waiting for fragmented server message");
+    });
+
+    socket.addEventListener("message", function (event) {
+      append(`message: ${event.data}`);
     });
 
     socket.addEventListener("close", function (event) {

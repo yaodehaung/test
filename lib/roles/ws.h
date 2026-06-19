@@ -8,5 +8,8 @@ const char *ws_alpn_id(void);
 int ws_is_upgrade_request(const char *request);
 int ws_build_handshake_response(const char *request, char *out,
                                 size_t out_len);
+size_t ws_build_text_fragments(const char **parts, size_t part_count, char *out,
+                               size_t out_len);
+size_t ws_build_close_frame(char *out, size_t out_len);
 
 #endif

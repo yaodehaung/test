@@ -11,9 +11,19 @@ SRC := lib/core/mini_express.c lib/misc/hash_map.c \
 	lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c \
 	lib/roles/http3.c lib/roles/ws.c
 OBJ := main.o $(SRC:.c=.o)
+WS_FRAGMENT_TEST := tests/ws_fragment_test
 UNAME_S := $(shell uname -s)
 
-.PHONY: all run debug test-js clean unsupported
+.PHONY: all run debug test test-js test-ws-fragments clean unsupported
+
+test: test-ws-fragments
+
+test-ws-fragments: tests/ws_fragment_test.c lib/roles/ws.c lib/roles/ws.h
+	$(CC) $(CFLAGS) tests/ws_fragment_test.c lib/roles/ws.c -o $(WS_FRAGMENT_TEST)
+	./$(WS_FRAGMENT_TEST)
+
+test-js:
+	node tests/ws_handshake_test.js
 
 ifeq ($(UNAME_S),Darwin)
 all run debug: unsupported
@@ -40,12 +50,9 @@ run: $(TARGET)
 run-80: $(TARGET)
 	sudo ./$(TARGET) 80
 
-test-js:
-	node tests/ws_handshake_test.js
-
 debug: CFLAGS := -Wall -Wextra -g -O0
 debug: clean $(TARGET)
 endif
 
 clean:
-	rm -f $(TARGET) $(OBJ)
+	rm -f $(TARGET) $(OBJ) $(WS_FRAGMENT_TEST)

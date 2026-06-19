@@ -75,6 +75,14 @@ static void dispatch_to_framework(ClientState *client, const char *method,
 static int dispatch_websocket_upgrade(ClientState *client)
 {
     char response[256];
+    const char *parts[] = {
+        "hello ",
+        "from ",
+        "fragmented websocket"
+    };
+    char frames[256];
+    size_t frames_len;
+    size_t close_len;
 
     if (!ws_is_upgrade_request(client->read_buf)) {
         return 0;
@@ -86,6 +94,21 @@ static int dispatch_websocket_upgrade(ClientState *client)
     }
 
     write_all(client->fd, response, strlen(response));
+    // Send one logical text message split across multiple WebSocket frames so
+    // browsers exercise continuation-frame handling after the handshake.
+    frames_len = ws_build_text_fragments(parts, sizeof(parts) / sizeof(parts[0]),
+                                         frames, sizeof(frames));
+    if (frames_len > 0) {
+        write_all(client->fd, frames, frames_len);
+    }
+
+    // Close gracefully after the demo message. A real server would keep the
+    // client state around and process incoming frames instead.
+    close_len = ws_build_close_frame(frames, sizeof(frames));
+    if (close_len > 0) {
+        write_all(client->fd, frames, close_len);
+    }
+
     return 1;
 }
 

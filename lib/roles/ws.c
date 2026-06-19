@@ -5,6 +5,10 @@
 #include <string.h>
 
 #define WS_GUID "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+#define WS_OPCODE_CONTINUATION 0x0
+#define WS_OPCODE_TEXT 0x1
+#define WS_OPCODE_CLOSE 0x8
+#define WS_FIN 0x80
 
 typedef struct {
     uint32_t state[5];
@@ -274,6 +278,27 @@ static void base64_encode_20(const unsigned char in[20], char out[29])
     out[o] = '\0';
 }
 
+static size_t ws_build_frame(unsigned char opcode, int fin, const char *payload,
+                             size_t payload_len, char *out, size_t out_len)
+{
+    unsigned char *frame = (unsigned char *)out;
+
+    // This tiny demo encoder only emits unmasked server-to-client frames with
+    // short payloads. WebSocket clients must mask frames, but servers must not.
+    if (payload_len > 125 || out_len < payload_len + 2) {
+        return 0;
+    }
+
+    frame[0] = (unsigned char)((fin ? WS_FIN : 0) | opcode);
+    frame[1] = (unsigned char)payload_len;
+
+    if (payload_len > 0) {
+        memcpy(frame + 2, payload, payload_len);
+    }
+
+    return payload_len + 2;
+}
+
 const char *ws_role_name(void)
 {
     return "ws";
@@ -315,4 +340,38 @@ int ws_build_handshake_response(const char *request, char *out, size_t out_len)
                     "Connection: Upgrade\r\n"
                     "Sec-WebSocket-Accept: %s\r\n\r\n",
                     accept) < (int)out_len;
+}
+
+size_t ws_build_text_fragments(const char **parts, size_t part_count, char *out,
+                               size_t out_len)
+{
+    size_t written = 0;
+
+    if (!parts || part_count == 0 || !out) {
+        return 0;
+    }
+
+    for (size_t i = 0; i < part_count; i++) {
+        const char *part = parts[i] ? parts[i] : "";
+        size_t part_len = strlen(part);
+        // The first fragment carries the text opcode. Every following fragment
+        // uses continuation until the final frame sets FIN.
+        unsigned char opcode = i == 0 ? WS_OPCODE_TEXT : WS_OPCODE_CONTINUATION;
+        int fin = i == part_count - 1;
+        size_t frame_len = ws_build_frame(opcode, fin, part, part_len,
+                                          out + written, out_len - written);
+
+        if (frame_len == 0) {
+            return 0;
+        }
+
+        written += frame_len;
+    }
+
+    return written;
+}
+
+size_t ws_build_close_frame(char *out, size_t out_len)
+{
+    return ws_build_frame(WS_OPCODE_CLOSE, 1, "", 0, out, out_len);
 }
