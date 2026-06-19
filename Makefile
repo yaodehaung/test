@@ -9,7 +9,7 @@ TARGET := mini_express
 MAIN_SRC := example/main.c
 SRC := lib/core/mini_express.c lib/misc/hash_map.c \
 	lib/core-net/epoll_server.c lib/misc/json_parser.c lib/misc/static_files.c \
-	lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c \
+	lib/misc/logger.c lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c \
 	lib/roles/http3.c lib/roles/ws.c example/controller/cache_controller.c
 OBJ := main.o $(SRC:.c=.o)
 WS_FRAGMENT_TEST := tests/ws_fragment_test

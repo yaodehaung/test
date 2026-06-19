@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <cache_controller.h>
 #include <epoll_server.h>
+#include <logger.h>
 
 #define DEFAULT_PORT 8080
 #ifndef NSIG
@@ -46,6 +47,28 @@ static void register_signal_handlers(void)
     }
 }
 
+static void configure_log_level(int argc, char **argv)
+{
+    const char *level = getenv("LOG_LEVEL");
+
+    if (argc > 2) {
+        level = argv[2];
+    }
+
+    if (!level) {
+        LOG_INFO("log level: %s", log_level_name(log_get_level()));
+        return;
+    }
+
+    if (!log_set_level_from_string(level)) {
+        LOG_WARN("unknown log level '%s', using %s",
+                 level, log_level_name(log_get_level()));
+        return;
+    }
+
+    LOG_INFO("log level: %s", log_level_name(log_get_level()));
+}
+
 int main(int argc, char **argv) {
     int port = DEFAULT_PORT;
 
@@ -53,6 +76,7 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
     }
 
+    configure_log_level(argc, argv);
     register_signal_handlers();
     register_cache_routes();
 

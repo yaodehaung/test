@@ -1,6 +1,7 @@
 #include "epoll_server.h"
 
 #include "../core/mini_express.h"
+#include "../misc/logger.h"
 #include "../misc/static_files.h"
 #include "../roles/ws.h"
 
@@ -154,8 +155,8 @@ int epoll_server_run(int port)
     ev.data.ptr = server_state;
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ev);
 
-    printf("100%% Pure C dependency-free web engine running on port %d...\n",
-           port);
+    LOG_INFO("100%% Pure C dependency-free web engine running on port %d",
+             port);
 
     while (1) {
         int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
