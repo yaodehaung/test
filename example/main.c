@@ -6,6 +6,9 @@
 #include <epoll_server.h>
 
 #define DEFAULT_PORT 8080
+#ifndef NSIG
+#define NSIG 64
+#endif
 
 static void handle_signal(int signo)
 {
@@ -22,13 +25,25 @@ static void handle_signal(int signo)
         write(STDERR_FILENO, msg, sizeof(msg) - 1);
         _exit(128 + signo);
     }
+
+    {
+        const char msg[] = "received signal, shutting down\n";
+
+        write(STDERR_FILENO, msg, sizeof(msg) - 1);
+        _exit(128 + signo);
+    }
 }
 
 static void register_signal_handlers(void)
 {
-    // SIGKILL from kill -9 cannot be caught, blocked, or handled by a process.
-    signal(SIGHUP, handle_signal);
-    signal(SIGTRAP, handle_signal);
+    for (int signo = 1; signo < NSIG; signo++) {
+        // SIGKILL and SIGSTOP cannot be caught, blocked, or handled.
+        if (signo == SIGKILL || signo == SIGSTOP) {
+            continue;
+        }
+
+        signal(signo, handle_signal);
+    }
 }
 
 int main(int argc, char **argv) {
