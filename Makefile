@@ -1,5 +1,6 @@
 CC ?= cc
 CXX ?= c++
+CPPFLAGS ?= -Ilib/core-net -Ilib/core -Ilib/misc
 CFLAGS ?= -Wall -Wextra -O2
 CXXFLAGS ?= $(CFLAGS) -std=c++11
 LDFLAGS ?=
@@ -39,10 +40,10 @@ $(TARGET): $(OBJ)
 	$(CXX) $(OBJ) -o $(TARGET) $(LDFLAGS)
 
 main.o: $(MAIN_SRC)
-	$(CXX) $(CXXFLAGS) -x c++ -c $(MAIN_SRC) -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -x c++ -c $(MAIN_SRC) -o $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 run: $(TARGET)
 	./$(TARGET)
