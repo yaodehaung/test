@@ -53,12 +53,8 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
     }
 
-    // Initialize the cache and register routes.
+    // Initialize the cache and register API routes.
     my_redis = (HashMap *)calloc(1, sizeof(HashMap));
-    app_get("/", [](Request *req, Response *res) {
-        (void)req;
-        res_success(res, "Welcome to 100% Pure C Dependency-Free Express Engine!");
-    });
     app_post("/api/cache/set", handle_set_cache);
     app_get("/api/cache/get", handle_get_cache);
 
