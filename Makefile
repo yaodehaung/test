@@ -6,7 +6,7 @@ CXXFLAGS ?= $(CFLAGS) -std=c++11
 LDFLAGS ?=
 
 TARGET := mini_express
-MAIN_SRC := main.c
+MAIN_SRC := example/main.c
 SRC := lib/core/mini_express.c lib/misc/hash_map.c \
 	lib/core-net/epoll_server.c lib/misc/json_parser.c lib/misc/static_files.c \
 	lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c \
