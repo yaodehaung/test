@@ -1,17 +1,17 @@
 ---
 name: pure-c-express-server
-description: Project workflow for the pure C dependency-free mini Express server in this repository. Use when Codex is asked to modify, explain, build, run, debug, or commit changes involving main.c, Makefile, the epoll HTTP server, mini router, JSON field parser, in-memory hash map cache, or Linux-kernel-style commit messages.
+description: Project workflow for the dependency-free mini Express server in this repository. Use when Codex is asked to modify, explain, build, run, debug, or commit changes involving main.c, Makefile, the epoll HTTP server, mini router, JSON field parser, in-memory hash map cache, inline C++ lambda route handlers, or Linux-kernel-style commit messages.
 ---
 
 # Pure C Express Server
 
 ## Overview
 
-Work on this repository as a small Linux-only C web server project. Preserve the dependency-free style: standard C/POSIX APIs, Linux sockets, epoll, a hand-written router, a simple JSON field extractor, and an in-memory hash map cache.
+Work on this repository as a small Linux-only dependency-free web server project. Most library code is C; `main.c` is intentionally compiled as C++ by the Makefile so route registration can use non-capturing lambda handlers.
 
 ## Project Shape
 
-- `main.c` contains cache API handlers, route registration, and startup entry point.
+- `main.c` contains cache API handlers, route registration, and startup entry point. It may use C++ non-capturing lambdas for route handlers even though the file keeps a `.c` suffix.
 - `lib/core/mini_express.h` exposes the mini router API, including `app_get()` and `app_post()`.
 - `lib/core/mini_express.c` owns the route table, route registration, dispatch, and response helpers.
 - `lib/core-net/epoll_server.h` exposes the Linux epoll server runner.
@@ -23,7 +23,7 @@ Work on this repository as a small Linux-only C web server project. Preserve the
 - `lib/roles/roles.h` exposes HTTP role values, currently `http1`, `http2`, and `http3`.
 - `lib/roles/roles.c` owns shared role string conversion and parsing.
 - `lib/roles/http1.c`, `lib/roles/http2.c`, and `lib/roles/http3.c` own per-protocol role metadata.
-- `Makefile` builds `main.c`, `lib/core/*.c`, `lib/core-net/*.c`, `lib/misc/*.c`, and the `lib/roles/*.c` modules into `mini_express`.
+- `Makefile` compiles `main.c` with `CXX -x c++`, compiles the `lib/core/*.c`, `lib/core-net/*.c`, `lib/misc/*.c`, and `lib/roles/*.c` modules as C, then links with `CXX`.
 - `CLAUDE.md` documents the architecture and expected behavior.
 - `.vscode/` is local editor configuration. Do not stage or commit it unless the user explicitly asks for it.
 
@@ -43,6 +43,7 @@ The code uses `sys/epoll.h`, so it must be compiled on Linux. On macOS, expect `
 ## Coding Guidelines
 
 - Keep the project dependency-free unless the user explicitly asks to add a library.
+- Route handlers in `main.c` may use C++ non-capturing lambdas, for example `app_get("/", [](Request *req, Response *res) { ... });`; exact JavaScript-style `()->{}` syntax is not supported by C or C++.
 - Prefer focused edits. Put router API changes in `lib/core/`, socket/epoll loop changes in `lib/core-net/`, cache and JSON helper changes in `lib/misc/`, HTTP role changes in `lib/roles/`, and API handler behavior in `main.c`.
 - Use standard C/POSIX patterns already present in the project.
 - Be careful with non-blocking sockets: partial reads/writes, `EAGAIN`, and `EWOULDBLOCK` matter.

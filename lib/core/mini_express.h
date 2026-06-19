@@ -1,6 +1,10 @@
 #ifndef MINI_EXPRESS_H
 #define MINI_EXPRESS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     const char *method;
     const char *path;
@@ -27,5 +31,9 @@ void app_dispatch_request(const char *method, const char *path,
 /* Convenience helpers for common JSON success and error responses. */
 void res_success(Response *res, const char *message);
 void res_error(Response *res, int status_code, const char *error_message);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

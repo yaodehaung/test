@@ -517,10 +517,10 @@ lib/roles/http3.h
 make
 ```
 
-或直接使用 gcc 編譯：
+目前 `main.c` 由 Makefile 以 C++ 模式編譯，支援 non-capturing lambda handler；`lib/` 內的其他模組仍以 C 編譯。
 
 ```bash
-gcc -Wall -Wextra -O2 main.c lib/core/mini_express.c lib/core-net/epoll_server.c lib/misc/hash_map.c lib/misc/json_parser.c lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c lib/roles/http3.c -o mini_express
+c++ -Wall -Wextra -O2 -x c++ -c main.c -o main.o
 ```
 
 ---

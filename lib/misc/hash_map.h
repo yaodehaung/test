@@ -1,6 +1,10 @@
 #ifndef HASH_MAP_H
 #define HASH_MAP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define HASH_MAP_SIZE 1024
 
 typedef struct HashNode {
@@ -21,5 +25,9 @@ void hash_map_set(HashMap *map, const char *key, const char *value);
 
 /* Return the stored value for a key, or NULL when the key is absent. */
 const char *hash_map_get(HashMap *map, const char *key);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

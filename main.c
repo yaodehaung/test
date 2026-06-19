@@ -10,11 +10,6 @@
 
 static HashMap *my_redis;
 
-void handle_home(Request *req, Response *res) {
-    (void)req;
-    res_success(res, "Welcome to 100% Pure C Dependency-Free Express Engine!");
-}
-
 void handle_set_cache(Request *req, Response *res) {
     char key[64] = {0};
     char value[256] = {0};
@@ -53,8 +48,11 @@ void handle_get_cache(Request *req, Response *res) {
 
 int main() {
     // Initialize the cache and register routes.
-    my_redis = calloc(1, sizeof(HashMap));
-    app_get("/", handle_home);
+    my_redis = (HashMap *)calloc(1, sizeof(HashMap));
+    app_get("/", [](Request *req, Response *res) {
+        (void)req;
+        res_success(res, "Welcome to 100% Pure C Dependency-Free Express Engine!");
+    });
     app_post("/api/cache/set", handle_set_cache);
     app_get("/api/cache/get", handle_get_cache);
 

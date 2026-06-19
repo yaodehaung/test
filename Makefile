@@ -1,11 +1,15 @@
 CC ?= cc
+CXX ?= c++
 CFLAGS ?= -Wall -Wextra -O2
+CXXFLAGS ?= $(CFLAGS) -std=c++11
 LDFLAGS ?=
 
 TARGET := mini_express
-SRC := main.c lib/core/mini_express.c lib/misc/hash_map.c \
+MAIN_SRC := main.c
+SRC := lib/core/mini_express.c lib/misc/hash_map.c \
 	lib/core-net/epoll_server.c lib/misc/json_parser.c \
 	lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c lib/roles/http3.c
+OBJ := main.o $(SRC:.c=.o)
 UNAME_S := $(shell uname -s)
 
 .PHONY: all run debug clean unsupported
@@ -20,8 +24,14 @@ unsupported:
 else
 all: $(TARGET)
 
-$(TARGET): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(TARGET) $(LDFLAGS)
+$(TARGET): $(OBJ)
+	$(CXX) $(OBJ) -o $(TARGET) $(LDFLAGS)
+
+main.o: $(MAIN_SRC)
+	$(CXX) $(CXXFLAGS) -x c++ -c $(MAIN_SRC) -o $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 run: $(TARGET)
 	./$(TARGET)
@@ -31,4 +41,4 @@ debug: clean $(TARGET)
 endif
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(OBJ)
