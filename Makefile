@@ -1,6 +1,6 @@
 CC ?= cc
 CXX ?= c++
-CPPFLAGS ?= -Ilib/core-net -Ilib/core -Ilib/misc
+CPPFLAGS ?= -Ilib/core-net -Ilib/core -Ilib/misc -Iexample/controller
 CFLAGS ?= -Wall -Wextra -O2
 CXXFLAGS ?= $(CFLAGS) -std=c++11
 LDFLAGS ?=
@@ -10,7 +10,7 @@ MAIN_SRC := example/main.c
 SRC := lib/core/mini_express.c lib/misc/hash_map.c \
 	lib/core-net/epoll_server.c lib/misc/json_parser.c lib/misc/static_files.c \
 	lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c \
-	lib/roles/http3.c lib/roles/ws.c
+	lib/roles/http3.c lib/roles/ws.c example/controller/cache_controller.c
 OBJ := main.o $(SRC:.c=.o)
 WS_FRAGMENT_TEST := tests/ws_fragment_test
 UNAME_S := $(shell uname -s)
