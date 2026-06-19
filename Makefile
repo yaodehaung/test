@@ -7,12 +7,13 @@ LDFLAGS ?=
 TARGET := mini_express
 MAIN_SRC := main.c
 SRC := lib/core/mini_express.c lib/misc/hash_map.c \
-	lib/core-net/epoll_server.c lib/misc/json_parser.c \
-	lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c lib/roles/http3.c
+	lib/core-net/epoll_server.c lib/misc/json_parser.c lib/misc/static_files.c \
+	lib/roles/roles.c lib/roles/http1.c lib/roles/http2.c \
+	lib/roles/http3.c lib/roles/ws.c
 OBJ := main.o $(SRC:.c=.o)
 UNAME_S := $(shell uname -s)
 
-.PHONY: all run debug clean unsupported
+.PHONY: all run debug test-js clean unsupported
 
 ifeq ($(UNAME_S),Darwin)
 all run debug: unsupported
@@ -35,6 +36,12 @@ main.o: $(MAIN_SRC)
 
 run: $(TARGET)
 	./$(TARGET)
+
+run-80: $(TARGET)
+	sudo ./$(TARGET) 80
+
+test-js:
+	node tests/ws_handshake_test.js
 
 debug: CFLAGS := -Wall -Wextra -g -O0
 debug: clean $(TARGET)

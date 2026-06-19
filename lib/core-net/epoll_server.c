@@ -1,6 +1,8 @@
 #include "epoll_server.h"
 
 #include "../core/mini_express.h"
+#include "../misc/static_files.h"
+#include "../roles/ws.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -68,6 +70,40 @@ static void dispatch_to_framework(ClientState *client, const char *method,
         return;
     }
     write_all(client->fd, res.response_buf, strlen(res.response_buf));
+}
+
+static int dispatch_websocket_upgrade(ClientState *client)
+{
+    char response[256];
+
+    if (!ws_is_upgrade_request(client->read_buf)) {
+        return 0;
+    }
+
+    if (!ws_build_handshake_response(client->read_buf, response,
+                                     sizeof(response))) {
+        return 0;
+    }
+
+    write_all(client->fd, response, strlen(response));
+    return 1;
+}
+
+static int dispatch_static_file(ClientState *client, const char *method,
+                                const char *path)
+{
+    char response[16384];
+
+    if (strcmp(method, "GET") != 0) {
+        return 0;
+    }
+
+    if (!static_file_build_response(path, response, sizeof(response))) {
+        return 0;
+    }
+
+    write_all(client->fd, response, strlen(response));
+    return 1;
 }
 
 int epoll_server_run(int port)
@@ -139,10 +175,18 @@ int epoll_server_run(int port)
                     }
                 }
 
+                if (dispatch_websocket_upgrade(state)) {
+                    goto disconnect;
+                }
+
                 sscanf(state->read_buf, "%15s %255s", method, path);
                 body = strstr(state->read_buf, "\r\n\r\n");
                 if (body) {
                     body += 4;
+                }
+
+                if (dispatch_static_file(state, method, path)) {
+                    goto disconnect;
                 }
 
                 dispatch_to_framework(state, method, path, body);

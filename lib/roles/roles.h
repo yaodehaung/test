@@ -5,6 +5,7 @@ typedef enum {
     ROLE_HTTP1,
     ROLE_HTTP2,
     ROLE_HTTP3,
+    ROLE_WS,
     ROLE_UNKNOWN
 } Role;
 

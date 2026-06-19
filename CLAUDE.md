@@ -501,6 +501,8 @@ lib/misc/hash_map.c
 lib/misc/hash_map.h
 lib/misc/json_parser.c
 lib/misc/json_parser.h
+lib/misc/static_files.c
+lib/misc/static_files.h
 lib/roles/roles.c
 lib/roles/roles.h
 lib/roles/http1.c
@@ -509,12 +511,24 @@ lib/roles/http2.c
 lib/roles/http2.h
 lib/roles/http3.c
 lib/roles/http3.h
+lib/roles/ws.c
+lib/roles/ws.h
+public/index.html
+public/ws-test.html
+public/ws-test.js
+tests/ws_handshake_test.js
 ```
 
 使用 Makefile 編譯：
 
 ```bash
 make
+```
+
+Node.js WebSocket handshake 測試：
+
+```bash
+make test-js
 ```
 
 目前 `main.c` 由 Makefile 以 C++ 模式編譯，支援 non-capturing lambda handler；`lib/` 內的其他模組仍以 C 編譯。
@@ -529,6 +543,24 @@ c++ -Wall -Wextra -O2 -x c++ -c main.c -o main.o
 
 ```bash
 ./mini_express
+```
+
+預設監聽 `8080`，所以首頁靜態頁面網址是：
+
+```bash
+http://127.0.0.1:8080/
+```
+
+如果要使用不帶 port 的網址：
+
+```bash
+http://127.0.0.1/
+```
+
+需要監聽 port 80：
+
+```bash
+sudo ./mini_express 80
 ```
 
 成功啟動後會看到：

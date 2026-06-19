@@ -20,10 +20,15 @@ Work on this repository as a small Linux-only dependency-free web server project
 - `lib/misc/hash_map.c` owns the hash function and hash map storage operations.
 - `lib/misc/json_parser.h` exposes the minimal JSON string field extractor.
 - `lib/misc/json_parser.c` owns flat JSON string field parsing.
-- `lib/roles/roles.h` exposes HTTP role values, currently `http1`, `http2`, and `http3`.
+- `lib/misc/static_files.h` exposes static file response building.
+- `lib/misc/static_files.c` serves files from `public/`; `/` maps to `public/index.html`.
+- `lib/roles/roles.h` exposes HTTP role values, currently `http1`, `http2`, `http3`, and `ws`.
 - `lib/roles/roles.c` owns shared role string conversion and parsing.
-- `lib/roles/http1.c`, `lib/roles/http2.c`, and `lib/roles/http3.c` own per-protocol role metadata.
+- `lib/roles/http1.c`, `lib/roles/http2.c`, `lib/roles/http3.c`, and `lib/roles/ws.c` own per-protocol role metadata. The `ws` role supports the opening WebSocket upgrade handshake, not full frame processing.
 - `Makefile` compiles `main.c` with `CXX -x c++`, compiles the `lib/core/*.c`, `lib/core-net/*.c`, `lib/misc/*.c`, and `lib/roles/*.c` modules as C, then links with `CXX`.
+- `public/` contains static pages served before mini Express route dispatch when a matching GET file exists.
+- `public/ws-test.html` and `public/ws-test.js` provide a browser WebSocket handshake smoke test.
+- `tests/ws_handshake_test.js` provides a dependency-free Node.js WebSocket handshake test against a running server.
 - `CLAUDE.md` documents the architecture and expected behavior.
 - `.vscode/` is local editor configuration. Do not stage or commit it unless the user explicitly asks for it.
 
@@ -34,9 +39,13 @@ Use the Makefile targets:
 ```bash
 make
 make run
+make run-80
+make test-js
 make debug
 make clean
 ```
+
+Default local URL is `http://127.0.0.1:8080/`. To serve `http://127.0.0.1/` without a port, run on port 80 with elevated privileges, for example `sudo ./mini_express 80` or `make run-80`.
 
 The code uses `sys/epoll.h`, so it must be compiled on Linux. On macOS, expect `make` to stop with the repository's Linux-only message. Do not treat that as a code regression unless the user asked for macOS portability.
 
@@ -54,6 +63,7 @@ The code uses `sys/epoll.h`, so it must be compiled on Linux. On macOS, expect `
 ## Expected Routes
 
 - `GET /` returns a welcome JSON response.
+- When `public/index.html` exists, `GET /` serves the static page before falling back to the route handler.
 - `POST /api/cache/set` reads `{"key":"...","value":"..."}` from the request body and stores it.
 - `GET /api/cache/get` currently reads `{"key":"..."}` from the request body and returns the cached value.
 
@@ -72,6 +82,7 @@ make run
 curl http://127.0.0.1:8080/
 curl -X POST http://127.0.0.1:8080/api/cache/set -H "Content-Type: application/json" -d '{"key":"name","value":"Nick"}'
 curl -X GET http://127.0.0.1:8080/api/cache/get -H "Content-Type: application/json" -d '{"key":"name"}'
+node tests/ws_handshake_test.js
 ```
 
 On macOS, report that full compile/run verification requires Linux.

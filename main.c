@@ -6,7 +6,7 @@
 #include "lib/misc/hash_map.h"
 #include "lib/misc/json_parser.h"
 
-#define PORT 8080
+#define DEFAULT_PORT 8080
 
 static HashMap *my_redis;
 
@@ -46,7 +46,13 @@ void handle_get_cache(Request *req, Response *res) {
     }
 }
 
-int main() {
+int main(int argc, char **argv) {
+    int port = DEFAULT_PORT;
+
+    if (argc > 1) {
+        port = atoi(argv[1]);
+    }
+
     // Initialize the cache and register routes.
     my_redis = (HashMap *)calloc(1, sizeof(HashMap));
     app_get("/", [](Request *req, Response *res) {
@@ -56,5 +62,5 @@ int main() {
     app_post("/api/cache/set", handle_set_cache);
     app_get("/api/cache/get", handle_get_cache);
 
-    return epoll_server_run(PORT);
+    return epoll_server_run(port);
 }
